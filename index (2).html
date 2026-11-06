@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PixelAI – Free AI Image Studio</title>
+<style>
+:root{--bg:#f6f5fb;--card:#fff;--text:#1b1a29;--muted:#6b6a80;--a:#6c4cf5;--b:#ff5fa2;--line:#e4e2f0;--ok:#16a34a}
+:root[data-theme="dark"]{--bg:#12111c;--card:#1c1b2b;--text:#f1f0fa;--muted:#9a99b3;--line:#2e2d44;--ok:#4ade80}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.35rem;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.right{display:flex;gap:8px;align-items:center}
+.badge{background:var(--ok);color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:99px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+h1{font-size:1.5rem;margin:0 0 6px}.sub{color:var(--muted);margin:0 0 12px;font-size:.92rem}
+label{display:block;font-weight:600;font-size:.85rem;margin:14px 0 6px}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:84px;resize:vertical}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 18px;font-weight:700;background:linear-gradient(90deg,var(--a),var(--b));color:#fff}
+button.full{width:100%;margin-top:16px;font-size:1rem}
+button:disabled{opacity:.6;cursor:wait}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);padding:6px 12px;font-size:.8rem;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--bg);color:var(--text);border:1px solid var(--line);padding:7px 13px;font-size:.82rem;font-weight:600;border-radius:99px}
+.chip.on{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;border-color:transparent}
+.ex .chip{font-weight:500;color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b));width:0}
+.small{font-size:.78rem;color:var(--muted)}
+.err{color:#e11d48;font-size:.85rem;margin-top:8px;min-height:1.2em}
+.hidden{display:none!important}
+.tabs{display:flex;gap:8px;margin:18px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:16px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
+.item img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;display:block;cursor:zoom-in;background:var(--bg)}
+.cap{font-size:.76rem;color:var(--muted);margin:6px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button,.acts a{padding:6px 10px;font-size:.75rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);text-decoration:none;font-weight:600;cursor:pointer}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.lb img{max-width:100%;max-height:100%;border-radius:12px}
+.loading{padding:30px;text-align:center;color:var(--muted)}
+.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--a);border-radius:50%;margin:0 auto 10px;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="logo">PixelAI Studio</span>
+  <span class="right">
+    <span class="badge">FREE</span>
+    <button class="ghost" id="theme">🌙</button>
+    <button class="ghost hidden" id="logout">Logout</button>
+  </span>
+</header>
+
+<section id="login" class="card">
+  <h1>Welcome 👋</h1>
+  <p class="sub">Email se login karo aur free me AI images banao: 9 styles, 4 sizes, roz 15 images.</p>
+  <label for="email">Email</label>
+  <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+  <div class="err" id="loginErr"></div>
+  <button class="full" id="loginBtn">Login / Continue</button>
+</section>
+
+<section id="app" class="hidden">
+  <div class="card">
+    <div class="row">
+      <div><b id="who"></b><div class="small">Aaj ki bachi images: <span id="left">-</span></div></div>
+      <div style="min-width:140px;flex:1;max-width:240px"><div class="bar"><i id="barfill"></i></div></div>
+    </div>
+
+    <label for="prompt">Aap kya banana chahte ho? (English me best chalta hai)</label>
+    <textarea id="prompt" maxlength="400" placeholder="e.g. a majestic lion standing on a cliff at sunrise"></textarea>
+    <div class="row" style="margin-top:8px">
+      <div class="chips ex" id="examples"></div>
+      <button class="ghost" id="enhance">✨ Prompt behtar karo</button>
+    </div>
+
+    <label>Style</label><div class="chips" id="styles"></div>
+    <label>Size</label><div class="chips" id="ratios"></div>
+    <label>Model</label><div class="chips" id="models"></div>
+
+    <div class="err" id="genErr"></div>
+    <button class="full" id="genBtn">✨ Generate Image</button>
+  </div>
+
+  <div class="tabs">
+    <button class="chip on" id="tabNew">Meri images</button>
+    <button class="chip" id="tabHist">History</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div id="histBox" class="hidden">
+    <div class="row" style="margin-top:14px"><span class="small">Pichli images (is browser me save). "Dobara" dabane par same settings bhar jaati hain.</span><button class="ghost" id="clearHist">History saaf karo</button></div>
+    <div class="grid" id="hist"></div>
+  </div>
+</section>
+</div>
+
+<div class="lb hidden" id="lb"><img id="lbimg" alt=""></div>
+
+<script>
+var $ = function(id){return document.getElementById(id)};
+var LS = {
+  get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},
+  del:function(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+var STYLES=[["none","Auto"],["photo","Photo"],["cartoon","Cartoon"],["anime","Anime"],["art3d","3D"],["neon","Neon"],["watercolor","Watercolor"],["logo","Logo"],["sketch","Sketch"]];
+var RATIOS=[["1:1","Square"],["16:9","Wide"],["9:16","Story / Reel"],["4:3","Photo"]];
+var MODELS=[["flux","Quality (flux)"],["turbo","Fast (turbo)"]];
+var EXAMPLES=["Ganga aarti at night in Varanasi","a cute robot reading a book","futuristic city at sunset"];
+var S={token:LS.get("px_token")||"",email:LS.get("px_email")||"",left:null,limit:15,style:"none",ratio:"1:1",model:"flux"};
+var hist=[];try{hist=JSON.parse(LS.get("px_hist")||"[]")}catch(e){}
+
+/* theme */
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);$("theme").textContent=t==="dark"?"☀️":"🌙";LS.set("px_theme",t)}
+setTheme(LS.get("px_theme")||(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+$("theme").onclick=function(){setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark")};
+
+/* chips */
+function chips(box,list,key){
+  var el=$(box);el.innerHTML="";
+  list.forEach(function(it){
+    var b=document.createElement("button");b.className="chip"+(S[key]===it[0]?" on":"");b.textContent=it[1];
+    b.onclick=function(){S[key]=it[0];chips(box,list,key)};
+    el.appendChild(b)});
+}
+function drawChips(){chips("styles",STYLES,"style");chips("ratios",RATIOS,"ratio");chips("models",MODELS,"model")}
+EXAMPLES.forEach(function(t){var b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=function(){$("prompt").value=t};$("examples").appendChild(b)});
+$("enhance").onclick=function(){
+  var p=$("prompt").value.trim();if(!p)return;
+  if(!/highly detailed/i.test(p))$("prompt").value=p+", highly detailed, professional composition, cinematic lighting";
+};
+
+/* state / render */
+function render(){
+  var on=!!S.token;
+  $("login").classList.toggle("hidden",on);
+  $("app").classList.toggle("hidden",!on);
+  $("logout").classList.toggle("hidden",!on);
+  if(on){
+    $("who").textContent=S.email;
+    $("left").textContent=S.left===null?"-":S.left+" / "+S.limit;
+    $("barfill").style.width=S.left===null?"0":Math.round(S.left/S.limit*100)+"%";
+    drawChips();renderHist();
+  }
+}
+function logout(){S.token="";S.email="";LS.del("px_token");LS.del("px_email");$("grid").innerHTML="";render()}
+$("logout").onclick=logout;
+
+$("loginBtn").onclick=async function(){
+  $("loginErr").textContent="";
+  try{
+    var r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("email").value})});
+    var d=await r.json();
+    if(!r.ok){$("loginErr").textContent=d.error||"Error";return}
+    S.token=d.token;S.email=d.email;S.left=d.left;S.limit=d.limit;
+    LS.set("px_token",S.token);LS.set("px_email",S.email);render();
+  }catch(e){$("loginErr").textContent="Server se connect nahi ho paya."}
+};
+$("email").addEventListener("keydown",function(e){if(e.key==="Enter")$("loginBtn").click()});
+
+async function refreshMe(){
+  if(!S.token)return;
+  try{
+    var r=await fetch("/api/me",{headers:{"x-token":S.token}});
+    if(r.status===401){logout();return}
+    var d=await r.json();S.left=d.left;S.limit=d.limit;render();
+  }catch(e){}
+}
+
+/* tabs */
+function tab(h){
+  $("grid").classList.toggle("hidden",h);$("histBox").classList.toggle("hidden",!h);
+  $("tabNew").classList.toggle("on",!h);$("tabHist").classList.toggle("on",h);
+}
+$("tabNew").onclick=function(){tab(false)};$("tabHist").onclick=function(){tab(true)};
+
+/* lightbox */
+$("lb").onclick=function(){$("lb").classList.add("hidden")};
+function zoom(src){$("lbimg").src=src;$("lb").classList.remove("hidden")}
+
+/* generate */
+async function generate(p){
+  var r=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json","x-token":S.token},body:JSON.stringify(p)});
+  if(r.status===401){logout();throw new Error("Dobara login karo.")}
+  if(!r.ok){var d={};try{d=await r.json()}catch(e){}throw new Error(d.error||"Error")}
+  var left=Number(r.headers.get("x-left"));if(!isNaN(left)){S.left=left;render()}
+  return {blob:await r.blob(),seed:Number(r.headers.get("x-seed"))};
+}
+function thumb(url,cb){
+  var im=new Image();
+  im.onload=function(){
+    var c=document.createElement("canvas"),s=240/Math.max(im.width,im.height);
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+    cb(c.toDataURL("image/jpeg",0.6));
+  };
+  im.onerror=function(){cb("")};im.src=url;
+}
+function addHist(p,url){
+  thumb(url,function(t){
+    hist.unshift({prompt:p.prompt,style:p.style,ratio:p.ratio,model:p.model,seed:p.seed,thumb:t});
+    hist=hist.slice(0,24);
+    while(hist.length){try{localStorage.setItem("px_hist",JSON.stringify(hist));break}catch(e){hist.pop()}}
+    renderHist();
+  });
+}
+function btn(t,fn){var b=document.createElement("button");b.textContent=t;b.onclick=fn;return b}
+
+function addCard(blob,p){
+  var url=URL.createObjectURL(blob);
+  var d=document.createElement("div");d.className="item";
+  var im=document.createElement("img");im.src=url;im.alt=p.prompt;im.onclick=function(){zoom(url)};
+  var c=document.createElement("div");c.className="cap";c.textContent=p.prompt;
+  var a=document.createElement("div");a.className="acts";
+  var dl=document.createElement("a");dl.href=url;dl.download="pixelai-"+Date.now()+".jpg";dl.textContent="⬇ Download";
+  a.appendChild(dl);
+  a.appendChild(btn("🔁 Variation",function(){run({prompt:p.prompt,style:p.style,ratio:p.ratio,model:p.model})}));
+  a.appendChild(btn("📋 Prompt",function(){try{navigator.clipboard.writeText(p.prompt)}catch(e){}}));
+  d.appendChild(im);d.appendChild(c);d.appendChild(a);
+  $("grid").insertBefore(d,$("grid").firstChild);
+  addHist(p,url);
+}
+function renderHist(){
+  var box=$("hist");box.innerHTML="";
+  hist.forEach(function(h){
+    var d=document.createElement("div");d.className="item";
+    if(h.thumb){var im=document.createElement("img");im.src=h.thumb;im.alt=h.prompt;im.onclick=function(){zoom(h.thumb)};d.appendChild(im)}
+    var c=document.createElement("div");c.className="cap";c.textContent=h.prompt;d.appendChild(c);
+    var a=document.createElement("div");a.className="acts";
+    a.appendChild(btn("↩ Dobara",function(){
+      $("prompt").value=h.prompt;S.style=h.style;S.ratio=h.ratio;S.model=h.model;drawChips();tab(false);window.scrollTo(0,0)}));
+    d.appendChild(a);box.appendChild(d);
+  });
+}
+$("clearHist").onclick=function(){hist=[];LS.del("px_hist");renderHist()};
+
+var busy=false;
+async function run(p){
+  if(busy)return;
+  $("genErr").textContent="";
+  if(!p.prompt){$("genErr").textContent="Pehle prompt likho.";return}
+  busy=true;tab(false);
+  var g=$("genBtn");g.disabled=true;g.textContent="Ban rahi hai… (10-30 sec)";
+  var ph=document.createElement("div");ph.className="item loading";
+  var sp=document.createElement("div");sp.className="spin";ph.appendChild(sp);
+  ph.appendChild(document.createTextNode("Image ban rahi hai…"));
+  $("grid").insertBefore(ph,$("grid").firstChild);
+  try{
+    var res=await generate(p);
+    p.seed=res.seed;
+    addCard(res.blob,p);
+  }catch(e){$("genErr").textContent=e.message||"Kuch gadbad hui, dobara try karo."}
+  finally{ph.remove();busy=false;g.disabled=false;g.textContent="✨ Generate Image"}
+}
+$("genBtn").onclick=function(){run({prompt:$("prompt").value.trim(),style:S.style,ratio:S.ratio,model:S.model})};
+
+render();refreshMe();
+</script>
+</body>
+</html>

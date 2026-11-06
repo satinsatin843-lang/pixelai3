@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PixelAI Admin</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:20px;background:#f6f5fb;color:#1b1a29}
+@media (prefers-color-scheme:dark){body{background:#12111c;color:#f1f0fa}td,th{border-color:#2e2d44!important}input{background:#1c1b2b;color:#fff}}
+.w{max-width:720px;margin:0 auto}input{padding:10px;border-radius:8px;border:1px solid #ccc;width:100%;max-width:300px}
+button{padding:10px 16px;border:0;border-radius:8px;background:#6c4cf5;color:#fff;font-weight:700;cursor:pointer}
+.stats{display:flex;gap:12px;margin:16px 0}.s{flex:1;padding:14px;border-radius:12px;background:rgba(108,76,245,.12);text-align:center}
+.s b{display:block;font-size:1.6rem}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #e4e2f0;text-align:left;font-size:.9rem}
+</style></head><body><div class="w">
+<h2>PixelAI Admin</h2>
+<input id="k" type="password" placeholder="ADMIN_KEY daalo"> <button id="go">Dekho</button>
+<div id="err" style="color:#e11d48;margin-top:8px"></div>
+<div id="out" style="display:none">
+<div class="stats"><div class="s"><b id="u">0</b>Users</div><div class="s"><b id="i">0</b>Images</div></div>
+<table><thead><tr><th>Email</th><th>Join</th><th>Images</th></tr></thead><tbody id="t"></tbody></table>
+</div></div>
+<script>
+document.getElementById("go").onclick=async function(){
+  var e=document.getElementById("err");e.textContent="";
+  try{
+    var r=await fetch("/api/admin?key="+encodeURIComponent(document.getElementById("k").value));
+    var d=await r.json();
+    if(!r.ok){e.textContent=d.error||"Error";return}
+    document.getElementById("out").style.display="block";
+    document.getElementById("u").textContent=d.users;
+    document.getElementById("i").textContent=d.images;
+    var t=document.getElementById("t");t.innerHTML="";
+    d.list.forEach(function(x){
+      var tr=document.createElement("tr");
+      [x.email,new Date(x.joined).toLocaleDateString(),x.images].forEach(function(v){
+        var td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+      t.appendChild(tr)});
+  }catch(x){e.textContent="Server se connect nahi hua."}
+};
+</script></body></html>
